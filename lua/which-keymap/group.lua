@@ -20,10 +20,10 @@ function M.keymap(mode, lhs, rhs, opts)
 	if type(mode) == "table" and vim.tbl_contains(mode, "i") then
 		return
 	end
-	if options.buffer then
-		return
-	end
-	pcall(which_key.register, { [lhs] = { rhs, options.desc } }, options)
+	-- if options.buffer then
+	-- 	return
+	-- end
+	pcall(which_key.register, { [lhs] = { rhs, options.desc or rhs } }, options)
 end
 
 function M.unkeymap(mode, lhs, opts)
@@ -66,7 +66,8 @@ function M.register_group(mode, prefix, tbl_keymap, opts)
 		for key, cmd_group in pairs(tbl_keymap) do
 			if key == "name" then
 				if type(cmd_group) == "string" then
-					M.keymap(mode, prefix, cmd_group)
+					opts.desc = cmd_group
+					M.keymap(mode, prefix, cmd_group, opts)
 				end
 			else
 				M.register_group(mode, prefix .. key, cmd_group, opts)
@@ -75,7 +76,7 @@ function M.register_group(mode, prefix, tbl_keymap, opts)
 	end
 end
 
-function M.unregister_group(mode, prefix, tbl_keymap)
+function M.unregister_group(mode, prefix, tbl_keymap, opts)
 	if vim.tbl_isempty(tbl_keymap) then
 		return
 	end
@@ -85,7 +86,7 @@ function M.unregister_group(mode, prefix, tbl_keymap)
 		for key, cmd_group in pairs(tbl_keymap) do
 			if key == "name" then
 				if type(cmd_group) == "string" then
-					M.unkeymap(mode, prefix, { desc = cmd_group })
+					M.unkeymap(mode, prefix, opts)
 					-- vim.keymap.del(mode, prefix)
 				end
 			else
@@ -101,6 +102,6 @@ function M.unregister(tbl, o)
 	local mode = opts.mode
 	opts.prefix = nil
 	opts.mode = nil
-	M.unregister_group(mode, prefix, tbl)
+	M.unregister_group(mode, prefix, tbl, opts)
 end
 return M
