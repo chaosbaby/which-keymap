@@ -13,29 +13,42 @@ local cmd = vim.api.nvim_create_user_command
 
 cmd("WhichHydraToogle", function(com)
 	local fargs = com.fargs
-	vim.print(fargs)
+	local prefixs = {}
 	for _, key in ipairs(fargs) do
-		local prefix = " " .. key
-		excmd.hydra_toggle("n", prefix)
+		table.insert(prefixs, " " .. key)
 	end
+
+	excmd.hydra_toggle("n", prefixs)
 end, { nargs = "+" })
 
 cmd("WhichHydraOn", function(com)
 	local fargs = com.fargs
-	vim.print(fargs)
+	local prefixs = {}
 	for _, key in ipairs(fargs) do
-		local prefix = " " .. key
-		excmd.hydra_toggle("n", prefix, "add")
+		table.insert(prefixs, " " .. key)
 	end
+	excmd.hydra_toggle("n", prefixs, "add")
 end, { nargs = "+" })
 
 cmd("WhichHydraOff", function(com)
 	local fargs = com.fargs
-	vim.print(fargs)
+	local prefixs = {}
 	for _, key in ipairs(fargs) do
-		local prefix = " " .. key
-		excmd.hydra_toggle("n", prefix, "del")
+		table.insert(prefixs, " " .. key)
 	end
+
+	excmd.hydra_toggle("n", prefixs, "del")
+end, { nargs = "+" })
+
+cmd("KeymapGroup", function(com)
+	local fargs = com.fargs
+	local prefixs = {}
+	for _, key in ipairs(fargs) do
+		table.insert(prefixs, " " .. key)
+	end
+	local keymaps = excmd.key_group("n", prefixs)
+
+	vim.print(keymaps)
 end, { nargs = "+" })
 
 return M

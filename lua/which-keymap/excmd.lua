@@ -31,47 +31,83 @@ function M.to_keymap_args(mapping)
 	return args
 end
 function M.key_group(mode, prefix)
+	local prefixs
+	if type(prefix) == "string" then
+		prefixs = { prefix }
+	else
+		prefixs = prefix
+	end
+
 	local keymaps = vim.api.nvim_get_keymap(mode)
 	local keymaps_table = {}
-	for _, v in pairs(keymaps) do
-		if vim.startswith(v.lhs, prefix) == true then
-			table.insert(keymaps_table, v)
+
+	for _, _prefix in ipairs(prefixs) do
+		for _, v in pairs(keymaps) do
+			if vim.startswith(v.lhs, _prefix) == true then
+				table.insert(keymaps_table, v)
+			end
 		end
 	end
 	return keymaps_table
 end
 
-function M.hydra_toggle(mode, prefix, sign)
-	local cmd_formater = "lua Which_show(20,'%s')"
-	local formatCmd = "<Cmd>" .. cmd_formater .. "<CR>"
-	local keymaps_table = M.key_group(mode, prefix)
-	for _, v in pairs(keymaps_table) do
-		local args = M.to_keymap_args(v)
-		if type(args.rhs) == "string" then
-			local excmd
-			if prefix == args.lhs then
-				excmd = formatCmd:format(prefix:sub(0, -2))
-			else
-				excmd = formatCmd:format(prefix)
-			end
-			if sign == nil then
-				if args.rhs:find(excmd, 0, true) then
-					args.rhs = util.replace(args.rhs, excmd, "")
-				else
-					args.rhs = args.rhs .. excmd
+function M.key_group_cat(mode, prefix)
+	local prefixs
+	if type(prefix) == "string" then
+		prefixs = { prefix }
+	else
+		prefixs = prefix
+	end
+
+	local keymaps = vim.api.nvim_get_keymap(mode)
+	local keymaps_table = {}
+	for _, _prefix in ipairs(prefixs) do
+		for _, v in pairs(keymaps) do
+			if vim.startswith(v.lhs, _prefix) == true then
+				if keymaps_table[_prefix] == nil then
+					keymaps_table[_prefix] = {}
 				end
-			elseif sign == "del" then
-				if args.rhs:find(excmd, 0, true) then
-					args.rhs = util.replace(args.rhs, excmd, "")
-				end
-			elseif sign == "add" then
-				if args.rhs:find(excmd, 0, true) then
-				else
-					args.rhs = args.rhs .. excmd
-				end
+				table.insert(keymaps_table[_prefix], v)
 			end
 		end
-		vim.keymap.set(args.mode, args.lhs, args.rhs, args.opts)
+	end
+
+	return keymaps_table
+end
+
+function M.hydra_toggle(mode, prefixs, sign)
+	local cmd_formater = "lua Which_show(20,'%s')"
+	local formatCmd = "<Cmd>" .. cmd_formater .. "<CR>"
+	local keymaps_table = M.key_group_cat(mode, prefixs)
+	for prefix, pred_tbl in pairs(keymaps_table) do
+		for _, v in pairs(pred_tbl) do
+			local args = M.to_keymap_args(v)
+			if type(args.rhs) == "string" then
+				local excmd
+				if prefix == args.lhs then
+					excmd = formatCmd:format(prefix:sub(0, -2))
+				else
+					excmd = formatCmd:format(prefix)
+				end
+				if sign == nil then
+					if args.rhs:find(excmd, 0, true) then
+						args.rhs = util.replace(args.rhs, excmd, "")
+					else
+						args.rhs = args.rhs .. excmd
+					end
+				elseif sign == "del" then
+					if args.rhs:find(excmd, 0, true) then
+						args.rhs = util.replace(args.rhs, excmd, "")
+					end
+				elseif sign == "add" then
+					if args.rhs:find(excmd, 0, true) then
+					else
+						args.rhs = args.rhs .. excmd
+					end
+				end
+			end
+			vim.keymap.set(args.mode, args.lhs, args.rhs, args.opts)
+		end
 	end
 end
 
