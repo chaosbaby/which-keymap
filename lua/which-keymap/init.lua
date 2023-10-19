@@ -8,4 +8,16 @@ M.excmd_append = excmd.excmd_append
 M.register = group.register
 M.unregister = group.unregister
 M.textobj = textobj
+
+local cmd = vim.api.nvim_create_user_command
+
+cmd("WhichHydraToogle", function(com)
+	local fargs = com.fargs
+	vim.print(fargs)
+	local cmd_formater = "lua Which_show(20,'%s')"
+	for _, key in ipairs(fargs) do
+		local prefix = " " .. key
+		M.excmd_toggle("n", prefix, cmd_formater:format(prefix))
+	end
+end, { nargs = "+" })
 return M
