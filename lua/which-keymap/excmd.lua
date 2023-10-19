@@ -40,6 +40,30 @@ function M.key_group(mode, prefix)
 	end
 	return keymaps_table
 end
+
+function M.hydra_toggle(mode, prefix)
+	local cmd_formater = "lua Which_show(20,'%s')"
+	local formatCmd = "<Cmd>" .. cmd_formater .. "<CR>"
+	local keymaps_table = M.key_group(mode, prefix)
+	for _, v in pairs(keymaps_table) do
+		local args = M.to_keymap_args(v)
+		if type(args.rhs) == "string" then
+			local excmd
+			if prefix == args.lhs then
+				excmd = formatCmd:format(prefix:sub(0, -2))
+			else
+				excmd = formatCmd:format(prefix)
+			end
+			if args.rhs:find(excmd, 0, true) then
+				args.rhs = util.replace(args.rhs, excmd, "")
+			else
+				args.rhs = args.rhs .. excmd
+			end
+		end
+		vim.keymap.set(args.mode, args.lhs, args.rhs, args.opts)
+	end
+end
+
 function M.excmd_toggle(mode, prefix, extraCmd)
 	local formatCmd = "<Cmd>" .. extraCmd .. "<CR>"
 	local keymaps_table = M.key_group(mode, prefix)
