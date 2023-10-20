@@ -92,8 +92,8 @@ function M.form_textobj_keymaps(prefix)
 	end
     keymaps["j"] = {("<Cmd>lua LastMoveObjAct(true,true) <CR>%s"):format(_excmd), "next start" }
     keymaps["J"] = { ("<Cmd>lua LastMoveObjAct(true,false) <CR>%s"):format(_excmd), "next end" }
-    keymaps["k"] = { ("<Cmd>lua LastMoveObjAct(false,true) <CR>%s"):format( _excmd), "prev end" }
-    keymaps["K"] =	{ ("<Cmd>lua LastMoveObjAct(false,false) <CR>%s"):format( _excmd), "next start" }
+    keymaps["k"] = { ("<Cmd>lua LastMoveObjAct(false,true) <CR>%s"):format( _excmd), "prev start" }
+    keymaps["K"] =	{ ("<Cmd>lua LastMoveObjAct(false,false) <CR>%s"):format( _excmd), "prev end" }
 
 	-- vim.print(keymaps)
 	group.register({ [prefix] = keymaps })
