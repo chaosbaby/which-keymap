@@ -40,6 +40,12 @@ cmd("WhichHydraOff", function(com)
 	excmd.hydra_toggle("n", prefixs, "del")
 end, { nargs = "+" })
 
+cmd("WhichFormTextobjKeymap", function(com)
+	-- local prefix = " ".. com.args
+	local prefix = com.args
+    textobj.form_textobj_keymaps(prefix)
+end, { nargs = 1 })
+
 cmd("KeymapGroup", function(com)
 	local fargs = com.fargs
 	local prefixs = {}

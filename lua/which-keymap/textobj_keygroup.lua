@@ -1,4 +1,6 @@
 local group = require("which-keymap.group")
+-- local treesitter = require("nvim-treesitter.textobjects.")
+local ts_repeat_move = require "nvim-treesitter.textobjects.repeatable_move"
 local M = {
 	prefix = "o",
 }
@@ -45,19 +47,61 @@ function Which_show(time, prefix)
 	end
 	vim.defer_fn(WhichKeyShow, time)
 end
+
+function LastMoveObjAct(forward,start)
+  if forward == nil then
+    forward = true
+  end
+  if start == nil then
+    start = true
+  end
+  vim.print(ts_repeat_move.last_move)
+  local opts = {start = start,forward = forward}
+  ts_repeat_move.repeat_last_move(opts)
+end
+
 M.defines_retro = {}
 -- vim.tbl_deep_extend("keep", M.defines, M.defines_retro)
 M.defines_retro = vim.tbl_extend("keep", M.defines, M.defines_retro)
 M.defines_retro = vim.tbl_add_reverse_lookup(M.defines_retro)
 -- vim.print(M.defines_retro)
 
-function Available_textobjects()
+function M.available_textobjects()
 	local shared = require("nvim-treesitter.textobjects.shared")
 	local available_textobjects = shared.available_textobjects(vim.bo.ft)
-	vim.print(available_textobjects)
 	return available_textobjects
 end
+
 function M.form_textobj_keymaps(prefix)
+	local excmd_fmt = "<Cmd>lua Which_show(20,' %s')<CR>"
+	-- local shared = require("nvim-treesitter.textobjects.shared")
+	-- local available_textobjects = shared.available_textobjects(vim.bo.ft)
+    local _excmd = excmd_fmt:format(prefix)
+	local keys = vim.tbl_keys(M.defines)
+	local keymaps = {}
+	for _, key in ipairs(keys) do
+		local name = M.defines_retro[key]
+		if key ~= nil then
+			keymaps[key] = {("<Cmd>TSTextobjectGotoNextStart @%s<CR>%s"):format(name, _excmd), name}
+		else
+			vim.print(key, name)
+		end
+	end
+    keymaps["j"] = {("<Cmd>lua LastMoveObjAct(true,true) <CR>%s"):format(_excmd), "next start" }
+    keymaps["J"] = { ("<Cmd>lua LastMoveObjAct(true,false) <CR>%s"):format(_excmd), "next end" }
+    keymaps["k"] = { ("<Cmd>lua LastMoveObjAct(false,true) <CR>%s"):format( _excmd), "prev end" }
+    keymaps["K"] =	{ ("<Cmd>lua LastMoveObjAct(false,false) <CR>%s"):format( _excmd), "next start" }
+
+	-- vim.print(keymaps)
+	group.register({ [prefix] = keymaps })
+	return keymaps
+end
+
+--[[
+query_strings_regex = "@function.outer",
+start = true
+]]
+--[[ function M.form_textobj_keymaps(prefix)
 	local excmd_fmt = "<Cmd>lua Which_show(20,' %s')<CR>"
 	-- local shared = require("nvim-treesitter.textobjects.shared")
 	-- local available_textobjects = shared.available_textobjects(vim.bo.ft)
@@ -81,8 +125,25 @@ function M.form_textobj_keymaps(prefix)
 	-- vim.print(keymaps)
 	group.register({ [prefix] = keymaps })
 	return keymaps
-end
+end ]]
 
+function M.update_textobj_keymaps()
+	local shared = require("nvim-treesitter.textobjects.shared")
+	local available_textobjects = shared.available_textobjects(vim.bo.ft)
+	local keys = vim.tbl_keys(M.defines)
+	local keymaps = {}
+	for _, key in ipairs(keys) do
+		local name = M.defines_retro[key]
+		local lhs = " " .. M.prefix .. key
+		-- vim.print(lhs, name)
+		if vim.tbl_contains(available_textobjects, name) then
+			group.keymap("n", lhs, name)
+		else
+			group.unkeymap("n", lhs)
+		end
+	end
+	return keymaps
+end
 --[[ function M.form_textobj_keymaps(prefix)
 	local excmd_fmt = "<Cmd>lua Which_show(20,' %s')<CR>"
 	-- local shared = require("nvim-treesitter.textobjects.shared")
@@ -135,12 +196,16 @@ function Key_buf_group(mode, prefix)
 	vim.print(keymaps_table)
 	return keymaps_table
 end
--- vim.api.nvim_create_autocmd("FileType", {
---
--- 	callback = function()
--- 		M.form_textobj_keymaps(M.prefix)
--- 	end,
--- })
+
+--[[ M.enable_filetypes = { "lua", "python" }
+vim.api.nvim_create_autocmd("FileType", {
+	callback = function()
+		-- if vim.tbl_contains(M.enable_filetypes, vim.bo.filetype) then
+			M.update_textobj_keymaps()
+		-- end
+	end,
+}) ]]
+
 -- vim.api.nvim_create_autocmd("FileType", {
 -- 	callback = function()
 -- 		a.run(function()
