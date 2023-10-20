@@ -1,6 +1,9 @@
 local group = require("which-keymap.group")
--- local treesitter = require("nvim-treesitter.textobjects.")
-local ts_repeat_move = require "nvim-treesitter.textobjects.repeatable_move"
+local ok,  ts_repeat_move = pcall(require, "nvim-treesitter.textobjects.repeatable_move")
+if not ok then
+  return
+end
+
 local M = {
 	prefix = "o",
 }
@@ -196,6 +199,12 @@ function Key_buf_group(mode, prefix)
 	vim.print(keymaps_table)
 	return keymaps_table
 end
+
+local cmd = vim.api.nvim_create_user_command
+cmd("WhichFormTextobjKeymap", function(com)
+	local prefix = com.args
+    M.form_textobj_keymaps(prefix)
+end, { nargs = 1 })
 
 --[[ M.enable_filetypes = { "lua", "python" }
 vim.api.nvim_create_autocmd("FileType", {
